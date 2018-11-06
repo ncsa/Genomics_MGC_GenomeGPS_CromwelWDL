@@ -42,11 +42,31 @@ task vqsrTask {
    String DebugMode                     # Enable or Disable Debug Mode
 
 
-   command {
-      /bin/bash ${VqsrScript} -s ${SampleName} -S ${Sentieon} -G ${Ref} -t ${SentieonThreads} -V ${InputVcf} -r ${VqsrSnpResourceString} -R ${VqsrIndelResourceString} -a ${AnnotateText} -e ${VqsrEnvProfile} ${DebugMode}
-   }
+   command <<<
+    set -euxo pipefail
 
-   
+    function sigusrhandler1()
+    {
+       echo "SIGUSR1 caught by shell script" 1>&2
+       echo 30 > ./rc
+       sync
+    }
+
+    function sigusrhandler2()
+    {
+       echo "SIGUSR2 caught by shell script" 1>&2
+       echo 31 > ./rc
+       sync
+    }
+
+
+    trap sigusrhandler1 SIGUSR1
+    trap sigusrhandler2 SIGUSR2
+
+
+      /bin/bash ${VqsrScript} -s ${SampleName} -S ${Sentieon} -G ${Ref} -t ${SentieonThreads} -V ${InputVcf} -r ${VqsrSnpResourceString} -R ${VqsrIndelResourceString} -a ${AnnotateText} -e ${VqsrEnvProfile} ${DebugMode}
+   >>>
+
    output {
       File OutputVcf = "${SampleName}.INDEL.SNP.recaled.vcf"
       File OutputVcfIdx = "${SampleName}.INDEL.SNP.recaled.vcf.idx"

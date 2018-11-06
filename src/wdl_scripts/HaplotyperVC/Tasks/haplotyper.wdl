@@ -43,11 +43,30 @@ task variantCallingTask {
    String DebugMode                               # Enable or Disable Debug Mode
 
 
-   command {
+   command <<<
+    set -euxo pipefail
+
+        function sigusrhandler1()
+        {
+           echo "SIGUSR1 caught by shell script" 1>&2
+           echo 30 > ./rc
+           sync
+        }
+
+        function sigusrhandler2()
+        {
+           echo "SIGUSR2 caught by shell script" 1>&2
+           echo 31 > ./rc
+           sync
+        }
+
+
+        trap sigusrhandler1 SIGUSR1
+        trap sigusrhandler2 SIGUSR2
 
       /bin/bash ${HaplotyperScript} -s ${SampleName} -S ${Sentieon} -G ${Ref} -t ${SentieonThreads} -b ${InputBams} -D ${DBSNP} -r ${RecalTable} -o ${HaplotyperExtraOptionsString} -e ${HaplotyperEnvProfile} ${DebugMode}
 
-   }
+  >>>
 
   output {
    
